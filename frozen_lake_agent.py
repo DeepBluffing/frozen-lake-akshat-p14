@@ -5,7 +5,7 @@ def train_agent():
     # Initialize environment (is_slippery=False makes it deterministic for easier learning)
     env = gym.make("FrozenLake-v1", is_slippery=False)
     
-    # Hyperparameters (TRY TWEAKING THEM!!!)
+    # Hyperparameters
     num_episodes = 5000
     alpha = 0.5       # Learning rate
     gamma = 0.95      # Discount factor
@@ -19,27 +19,36 @@ def train_agent():
     for i in range(num_episodes):
         state, _ = env.reset()
         done = False
-        
         while not done:
             # ==========================================
-            # TODO 1: Implement Epsilon-Greedy Action Selection
-            # Hint: Generate a random number using np.random.uniform(0, 1). 
-            # If it's less than epsilon, choose a random action (env.action_space.sample()).
-            # Otherwise, choose the action with the highest Q-value for the current state (np.argmax).
+            # TODO 1: Implement Epsilon-Greedy Action Selection [COMPLETED]
             # ==========================================
-            action = 0 # Replace this line!
-            
+            if np.random.uniform(0, 1) < epsilon:
+                # Explore: Choose a random legal direction
+                action = env.action_space.sample()
+            else:
+                # Exploit: Choose the direction with the highest Q-value for this state
+                action = np.argmax(q_table[state])
             
             # Take the action
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
 
             # ==========================================
-            # TODO 2: The Bellman Equation Update
-            # Update q_table[state, action] using alpha, gamma, the reward, and the max Q-value of the next_state.
+            # TODO 2: The Bellman Equation Update [COMPLETED]
             # ==========================================
-            pass # Replace this line!
-
+            # 1. Fetch the old score for this state-action pair
+            old_q_value = q_table[state, action]
+            
+            # 2. Find the maximum possible Q-value out of all actions in the next state
+            max_future_q = np.max(q_table[next_state])
+            
+            # 3. Apply the off-policy Temporal-Difference Bellman equation
+            temporal_difference_target = reward + (gamma * max_future_q)
+            new_q_value = old_q_value + alpha * (temporal_difference_target - old_q_value)
+            
+            # 4. Save the calculated value back into our Q-table grid matrix
+            q_table[state, action] = new_q_value
             
             state = next_state
             
